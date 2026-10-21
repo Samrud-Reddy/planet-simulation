@@ -43,8 +43,7 @@ impl PlanateryObject {
     }
 
     fn get_accel(&self, force: Vector2D<f64, WorldF>) -> Vector2D<f64, WorldA> {
-        let curr_mag = force.length();
-        force.with_length(curr_mag/self.mass).cast_unit()
+        (force / self.mass).cast_unit()
     }
 
     fn get_accel_at(&self, pos: Point2D<f64, WorldM>, other_planets: &Vec<PlanateryObject>,) -> Vector2D<f64, WorldA> 
@@ -135,7 +134,7 @@ impl World {
         self.current_time >= self.max_time
     }
 
-    fn plot<DB>(&self, root: &DrawingArea<DB, Shift>) -> Result<(), Box<dyn std::error::Error>>
+    fn plot<DB>(&self, root: &DrawingArea<DB, Shift>, title: &str) -> Result<(), Box<dyn std::error::Error>>
     where DB: DrawingBackend,
           DB::ErrorType: 'static,
     {
@@ -151,7 +150,7 @@ impl World {
 
         let mut chart = ChartBuilder::on(root)
             .margin(20)
-            .caption("Planetary Orbits", ("sans-serif", 30).into_font())
+            .caption(title, ("sans-serif", 30).into_font())
             .build_cartesian_2d(-limit..limit, -limit..limit)?;
 
         chart.configure_mesh().draw()?;
@@ -169,6 +168,12 @@ impl World {
 
             let color = Palette99::pick(i).mix(0.8);
 
+
+            if let Some(&start) = path.first() {
+                chart.draw_series(std::iter::once(
+                        Circle::new(start, 5, color.filled()),
+                ))?;
+            }
 
             chart.draw_series(LineSeries::new(
                 path,
@@ -189,17 +194,24 @@ impl World {
 
 
 fn main() -> Result<(), Box<dyn Error>>{
-    let backend = BitMapBackend::new("data/3_body_problem.png", (800, 800));
+    let backend = BitMapBackend::new("data/planetery-orbits-1000yrs.png", (800, 800));
     let root = backend.into_drawing_area();
     root.fill(&WHITE)?;
 
 
-    let m = 2.0e30;
-    let star1 = PlanateryObject::new("star1", m, point2(1.5e11, 0.), vec2(0., 15000.));
-    let star2 = PlanateryObject::new("star2", m, point2(-1.5e11, 0.), vec2(0., -15000.));
-    let star3 = PlanateryObject::new("star3", m, point2(0., 2.0e11), vec2(0., 0.));
+    //Stable 3 body problem
+    // let m = 2.0e30;
+    // let star1 = PlanateryObject::new("star1", m, point2(-1.455e11,  0.3646e11), vec2( 13907.,  12898.));
+    // let star2 = PlanateryObject::new("star2", m, point2( 1.455e11, -0.3646e11), vec2( 13907.,  12898.));
+    // let star3 = PlanateryObject::new("star3", m, point2( 0.0,       0.0),       vec2(-27814., -25796.));
 
-    let sun     = PlanateryObject::new("sun", 1.989e30, point2(0.0, 0.0), vec2(1.0, 1.0));
+    //Chaotic 3 body problem
+    // let m = 2.0e30;
+    // let star1 = PlanateryObject::new("star1", m, point2( 1.50e11,  0.0),      vec2(     0., 18050.));
+    // let star2 = PlanateryObject::new("star2", m, point2(-0.75e11,  1.299e11), vec2(-15588., -9025.));
+    // let star3 = PlanateryObject::new("star3", m, point2(-0.75e11, -1.299e11), vec2( 15588., -9025.));
+
+    let sun     = PlanateryObject::new("sun", 1.989e30, point2(0.0, 0.0), vec2(0., 0.));
     let mercury = PlanateryObject::new("mercury", 3.301e23, point2(5.79e10, 0.0), vec2(0.0, 47360.0));
     let venus   = PlanateryObject::new("venus", 4.867e24, point2(1.08e11, 0.0), vec2(0.0, 35020.0));
     let earth   = PlanateryObject::new("earth", 5.972e24, point2(1.49e11, 0.0), vec2(0.0, 29780.0));
@@ -209,20 +221,20 @@ fn main() -> Result<(), Box<dyn Error>>{
     let uranus  = PlanateryObject::new("uranus", 8.681e25, point2(2.87e12, 0.0), vec2(0.0, 6810.0));
     let neptune = PlanateryObject::new("neptune", 1.024e26, point2(4.50e12, 0.0), vec2(0.0, 5430.0));
 
-    // let planets = vec![sun, mercury, venus, earth, mars];
-    let planets = vec![star1, star2, star3];
+    let bodies = vec![sun, mercury, venus, earth, mars];
+    // let bodies = vec![star1, star2, star3];
 
-    let steps = 300000;
-    let run_time = YEAR*0.3;
+    let steps = 500000;
+    let run_time = YEAR*1000.;
     let timestep = run_time/steps as f64;
 
-    let mut world = World::new(planets, run_time, timestep);
+    let mut world = World::new(bodies, run_time, timestep);
 
     while !world.done() {
         world.update();
     }
 
-    world.plot(&root)?;
+    world.plot(&root, "Planet orbits 1000 years")?;
     root.present()?;
     
 

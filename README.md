@@ -30,7 +30,8 @@ The circles show the initial position of the objects
 ![3 Body problem stable](./data/stable-3-body-problem.png)
 ![10 years orbit](./data/planetery-orbits-10yrs.png)
 ![1000 years orbit](./data/planetery-orbits-1000yrs.png)
-Run in 1.575 seconds
+
+Runs in 1.575 seconds
 At first glance, the thick bands at the top and bottom might look like numerical energy loss or inaccuracy.
 However, closer analysis showed this is actually conservation of momentum in action, because all the planets start with an upward (+y) velocity while the Sun starts at rest, the entire Solar System's center of mass slowly drifts upward over the 1,000-year run. 
 You can see the Sun's upward path in the center, while the left and right edges of each orbit remain razor-thin—confirming orbital energy is conserved.
